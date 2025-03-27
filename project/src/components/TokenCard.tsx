@@ -18,7 +18,6 @@ import { FaXTwitter, FaGlobe } from "react-icons/fa6";
 import { CiPill } from "react-icons/ci";
 import { Button } from "@/components/ui/button";
 import Solana from "@/assets/solana.png";
-import { Progress } from "@/components/ui/progress";
 
 interface TokenCardProps {
 	token: Token;
@@ -64,6 +63,11 @@ const TokenCard: React.FC<TokenCardProps> = ({
 	}, [token]);
 
 	const progress = getProgress;
+	const radius = 24;
+	const strokeWidth = 3;
+	const normalizedRadius = radius - strokeWidth * 2;
+	const circumference = normalizedRadius * 2 * Math.PI;
+	const strokeDashoffset = circumference - (progress / 100) * circumference;
 
 	return (
 		<div
@@ -74,12 +78,48 @@ const TokenCard: React.FC<TokenCardProps> = ({
 		>
 			<div>
 				<div className="flex gap-2.5">
-					<div className="items-center">
+					<div className="relative flex items-center justify-center size-20 group cursor-pointer">
+						<svg
+							width={radius * 2}
+							height={radius * 2}
+							viewBox={`0 0 ${radius * 2} ${radius * 2}`}
+							className="absolute inset-0 w-full h-full"
+						>
+							<circle
+								stroke="#1A1A1A"
+								fill="transparent"
+								strokeWidth={strokeWidth}
+								r={normalizedRadius}
+								cx={radius}
+								cy={radius}
+							/>
+							<circle
+								stroke="currentColor"
+								fill="transparent"
+								strokeWidth={strokeWidth}
+								strokeDasharray={`${circumference} ${circumference}`}
+								style={{ strokeDashoffset }}
+								r={normalizedRadius}
+								cx={radius}
+								cy={radius}
+								className={`rotate-[-90deg] origin-center transition-all duration-500 ${
+									progress >= 100
+										? "text-green-500"
+										: progress >= 70
+										? "text-yellow-500"
+										: "text-accent-blue"
+								}`}
+							/>
+						</svg>
+						<span className="absolute text-white text-sm font-bold bg-black size-16 rounded-full bg-opacity-90 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+							{progress}%
+						</span>
 						<img
 							src={token.imageUrl}
-							className="bg-gray-400 dark:bg-gray-300 size-20 rounded-full"
+							className="bg-gray-400 dark:bg-gray-300 size-16 rounded-full"
 						/>
 					</div>
+
 					<div className="flex flex-col gap-2 justify-between">
 						<span className="flex items-center h-max gap-2">
 							<h4 className="font-bold">{token.symbol}</h4>
@@ -105,6 +145,7 @@ const TokenCard: React.FC<TokenCardProps> = ({
 							)}
 						</span>
 						<span className="flex items-center gap-2">
+							{formatTimeAgo(token.createdAt)}
 							{!token?.social?.twitter && (
 								<a
 									href={token.social.twitter + "hi"}
@@ -132,10 +173,6 @@ const TokenCard: React.FC<TokenCardProps> = ({
 							</a>
 						</span>
 					</div>
-				</div>
-				<div className="mt-1.5 flex flex-col items-center max-w-20">
-					<Progress value={progress} className="w-full h-1" />
-					<p>{formatTimeAgo(token.createdAt)}</p>
 				</div>
 			</div>
 			<div className="flex flex-col">

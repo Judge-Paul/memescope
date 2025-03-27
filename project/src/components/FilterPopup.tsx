@@ -123,15 +123,7 @@ export default function FilterPopup({ category }: FilterPopupProps) {
 			</DialogTrigger>
 			<DialogContent className="max-w-[90vw] sm:max-w-[600px] max-h-[90vh] rounded-2xl overflow-hidden flex flex-col">
 				<DialogHeader>
-					<DialogTitle className="text-xl">
-						"
-						{category === "newlyCreated"
-							? "Newly Created"
-							: category === "aboutToGraduate"
-							? "About to Graduate"
-							: "Graduated"}
-						" Filters
-					</DialogTitle>
+					<DialogTitle className="text-xl">Filters</DialogTitle>
 				</DialogHeader>
 
 				<div className="overflow-y-auto pr-2 -mr-2">
