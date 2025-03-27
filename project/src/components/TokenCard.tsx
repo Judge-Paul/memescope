@@ -1,19 +1,48 @@
-import React from "react";
-import { ArrowUp, ArrowDown, Users, Zap } from "lucide-react";
+import React, { useMemo } from "react";
+import {
+	Zap,
+	Copy,
+	Search,
+	User,
+	ChartCandlestick,
+	BadgeDollarSign,
+	Coins,
+	Bot,
+	Target,
+	Cog,
+} from "lucide-react";
 import type { Token } from "../types/token";
-import QuickBuy from "./ui/QuickBuy";
+import { cn, formatNumber } from "@/lib/utils";
+import { toast } from "sonner";
+import { FaXTwitter, FaGlobe } from "react-icons/fa6";
+import { CiPill } from "react-icons/ci";
+import { Button } from "@/components/ui/button";
+import Solana from "@/assets/solana.png";
+import { Progress } from "@/components/ui/progress";
 
 interface TokenCardProps {
 	token: Token;
+	quickBuy: boolean;
+	quickBuyAmount: number;
 }
 
-const TokenCard: React.FC<TokenCardProps> = ({ token }) => {
-	const input = document.querySelector<HTMLInputElement>(
-		'input[type="number"]',
-	);
-	const quickBuyAmount = input?.value || "1.0";
+const formatTimeAgo = (timestamp: string) => {
+	const date = new Date(timestamp);
+	const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+	if (seconds < 60) return `${seconds}s`;
+	const minutes = Math.floor(seconds / 60);
+	if (minutes < 60) return `${minutes}m`;
+	const hours = Math.floor(minutes / 60);
+	if (hours < 24) return `${hours}h`;
+	return `${Math.floor(hours / 24)}d`;
+};
 
-	const getProgress = () => {
+const TokenCard: React.FC<TokenCardProps> = ({
+	token,
+	quickBuy,
+	quickBuyAmount,
+}) => {
+	const getProgress = useMemo(() => {
 		// Check if token is in graduated list
 		if (token.price.includes("K") && parseInt(token.price) > 100) {
 			return 100;
@@ -32,123 +61,150 @@ const TokenCard: React.FC<TokenCardProps> = ({ token }) => {
 			? Math.min(Math.max(parseFloat(token.stats.priceChange5m), 0), 100)
 			: 0;
 		return Math.min(baseProgress, 30);
-	};
+	}, [token]);
 
-	const progress = getProgress();
-	const radius = 24;
-	const strokeWidth = 3;
-	const normalizedRadius = radius - strokeWidth * 2;
-	const circumference = normalizedRadius * 2 * Math.PI;
-	const strokeDashoffset = circumference - (progress / 100) * circumference;
-
-	const formatTimeAgo = (timestamp: string) => {
-		const date = new Date(timestamp);
-		const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-		if (seconds < 60) return `${seconds}s`;
-		const minutes = Math.floor(seconds / 60);
-		if (minutes < 60) return `${minutes}m`;
-		const hours = Math.floor(minutes / 60);
-		if (hours < 24) return `${hours}h`;
-		return `${Math.floor(hours / 24)}d`;
-	};
+	const progress = getProgress;
 
 	return (
-		<div className="bg-background-tertiary rounded-lg p-3 w-full hover:bg-background-secondary transition-colors cursor-pointer">
-			<div className="flex items-center justify-between mb-2">
-				<div className="flex items-center justify-between w-full">
-					<div className="flex items-center gap-2">
-						<div className="relative w-16 h-16">
-							<svg
-								width={radius * 2}
-								height={radius * 2}
-								viewBox={`0 0 ${radius * 2} ${radius * 2}`}
-								className="absolute top-0 left-0 w-16 h-16"
-							>
-								<circle
-									stroke="#1A1A1A"
-									fill="transparent"
-									strokeWidth={strokeWidth}
-									r={normalizedRadius}
-									cx={radius}
-									cy={radius}
-								/>
-								<circle
-									stroke="currentColor"
-									fill="transparent"
-									strokeWidth={strokeWidth}
-									strokeDasharray={circumference + " " + circumference}
-									style={{ strokeDashoffset }}
-									r={normalizedRadius}
-									cx={radius}
-									cy={radius}
-									className={`rotate-[-90deg] origin-[50%_50%] transition-all duration-500 ${
-										progress >= 100
-											? "text-green-500"
-											: progress >= 70
-											? "text-yellow-500"
-											: "text-accent-blue"
-									}`}
-								/>
-							</svg>
-							{token.imageUrl ? (
-								<img
-									src={token.imageUrl}
-									alt={token.symbol}
-									className="absolute top-3 left-3 w-10 h-10 rounded-full"
-								/>
-							) : (
-								<div className="absolute top-3 left-3 w-10 h-10 rounded-full bg-accent-blue/20 flex items-center justify-center">
-									<Zap className="w-4 h-4 text-accent-blue" />
-								</div>
-							)}
-							<div className="absolute -top-1 -right-1 text-[8px] font-medium bg-background-secondary/80 rounded-full px-1 py-0.5 border border-background-tertiary">
-								{progress.toFixed(0)}%
-							</div>
-						</div>
-						<div>
-							<div className="flex items-center gap-1">
-								<span className="font-medium">{token.symbol}</span>
-								<img
-									src="https://i.postimg.cc/63LXRtM0/Pump-fun-logo.png"
-									alt="View on pump.fun"
-									className="w-4 h-4 cursor-pointer hover:opacity-80 transition-opacity"
-									onClick={(e) => {
-										e.stopPropagation();
-										window.open(
-											`https://pump.fun/token/${token.address}`,
-											"_blank",
-										);
-									}}
-								/>
-							</div>
-							<div className="text-xs text-foreground-secondary">
-								{formatTimeAgo(token.createdAt)}
-							</div>
-						</div>
+		<div
+			className={cn(
+				"flex justify-between bg-accent p-2.5 rounded-lg",
+				"hover:border border-accent-green",
+			)}
+		>
+			<div>
+				<div className="flex gap-2.5">
+					<div className="items-center">
+						<img
+							src={token.imageUrl}
+							className="bg-gray-400 dark:bg-gray-300 size-20 rounded-full"
+						/>
 					</div>
-					<QuickBuy solAmount={quickBuyAmount} onBuy={() => {}} />
+					<div className="flex flex-col gap-2 justify-between">
+						<span className="flex items-center h-max gap-2">
+							<h4 className="font-bold">{token.symbol}</h4>
+							<p className="text-xs text-foreground-secondary font-light">
+								{token.name}
+							</p>
+						</span>
+						<span className="flex items-center gap-2">
+							{token.address}
+							<Copy
+								onClick={() => toast.info("Contract Address copied")}
+								size={16}
+								className="cursor-pointer hover:text-black/50 dark:hover:text-white/50"
+							/>
+							{!token?.social?.twitter && (
+								<a
+									href={`https://x.com/search?q=${token.address}`}
+									target="_blank"
+									className="cursor-pointer hover:text-black/50 dark:hover:text-white/50"
+								>
+									<Search size={16} />
+								</a>
+							)}
+						</span>
+						<span className="flex items-center gap-2">
+							{!token?.social?.twitter && (
+								<a
+									href={token.social.twitter + "hi"}
+									target="_blank"
+									className="cursor-pointer hover:text-black/50 dark:hover:text-white/50"
+								>
+									<FaXTwitter size={16} />
+								</a>
+							)}
+							{!token?.social?.website && (
+								<a
+									href={token.social.website + "hi"}
+									target="_blank"
+									className="cursor-pointer hover:text-black/50 dark:hover:text-white/50"
+								>
+									<FaGlobe size={16} />
+								</a>
+							)}
+							<a
+								href={`https://pump.fun/token/${token.address}`}
+								target="_blank"
+								className="cursor-pointer hover:text-black/50 dark:hover:text-white/50"
+							>
+								<CiPill size={19} />
+							</a>
+						</span>
+					</div>
+				</div>
+				<div className="mt-1.5 flex flex-col items-center max-w-20">
+					<Progress value={progress} className="w-full h-1" />
+					<p>{formatTimeAgo(token.createdAt)}</p>
 				</div>
 			</div>
-
-			<div className="flex items-center justify-between">
-				<div className="flex items-center gap-3">
-					<div className="flex items-center gap-1 text-accent-green text-sm">
-						<ArrowUp className="w-3 h-3 group-hover:text-accent-green-hover" />
-						{token.buys}
-					</div>
-					<div className="flex items-center gap-1 text-accent-red text-sm">
-						<ArrowDown className="w-3 h-3 group-hover:text-accent-red-hover" />
-						{token.sells}
-					</div>
-				</div>
-				<div className="flex items-center gap-3 text-xs text-foreground-secondary">
-					<span>VOL ${token.volume}</span>
-					<span>MC ${token.marketCap}</span>
-					<div className="flex items-center gap-1">
-						<Users className="w-3 h-3" />
+			<div className="flex flex-col">
+				<Button
+					variant="outline"
+					className={cn(
+						"flex items-center gap-1 rounded-full h-12 w-32 ml-auto font-bold text-base text-white",
+						"bg-gradient-to-br from-accent-blue via-accent-blue to-accent-purple",
+						"transition-all duration-300 ease-in-out hover:scale-105 active:scale-95",
+					)}
+				>
+					{quickBuy && <Zap fill="white" size={14} />}
+					<img src={Solana} className="w-3.5 aspect-square mr-1" />
+					{formatNumber(quickBuyAmount || 0)}
+				</Button>
+				<span className="mt-2 flex gap-1.5 text-xs ml-auto">
+					<span
+						className="flex items-center gap-0.5 cursor-default"
+						title="Holder Count"
+					>
+						<User fill="white" size={14} />
 						{token.holders}
-					</div>
-				</div>
+					</span>
+					<span
+						className="flex items-center gap-0.5 cursor-default"
+						title="Volume"
+					>
+						<ChartCandlestick size={14} />
+						{token.volume}
+					</span>
+					<span
+						className="flex items-center gap-0.5 cursor-default"
+						title="Market Cap"
+					>
+						<BadgeDollarSign size={14} />
+						{token.marketCap}
+					</span>
+				</span>
+				<span className="mt-1.5 flex gap-1.5 text-xs ml-auto">
+					<span
+						className="flex items-center gap-0.5 cursor-default"
+						title="Percent of tokens held by top 10 wallets"
+					>
+						<Coins size={14} />
+						{token.holders + "%"}
+					</span>
+					<span
+						className="flex items-center gap-0.5 cursor-default"
+						title="Percent of tokens held by the dev team"
+					>
+						<Cog size={14} />
+						{token.holders + "%"}
+						{/* ideally should be the number of tokens held by dev team */}
+					</span>
+					<span
+						className="flex items-center gap-0.5 cursor-default"
+						title="Number of snipers trading this token"
+					>
+						<Target size={14} />
+						{token.buys} {/* ideally should be snipers number, if possible */}
+					</span>
+					<span
+						className="flex items-center gap-0.5 cursor-default"
+						title="Number of bots trading this token"
+					>
+						<Bot size={14} />
+						{token.sells} {/* ideally should be bots number */}
+					</span>
+				</span>
 			</div>
 		</div>
 	);

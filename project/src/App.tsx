@@ -1,10 +1,14 @@
-import React from 'react';
-import MemeScope from './pages/MemeScope';
+import { Toaster } from "sonner";
+import { ThemeProvider } from "@/components/theme-provider";
+import MemeScope from "@/pages/MemeScope";
 
 function App() {
-  return (
-    <MemeScope />
-  );
+	return (
+		<ThemeProvider>
+			<Toaster richColors position="top-right" />
+			<MemeScope />
+		</ThemeProvider>
+	);
 }
 
 export default App;
